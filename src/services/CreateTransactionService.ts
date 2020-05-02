@@ -28,15 +28,18 @@ class CreateTransactionService {
       where: { title: category },
     });
 
-    let categoryFind = categoryRepository.create({
-      title: category,
-    });
-    if (checkCategoryExists) {
-      categoryFind = await categoryRepository.getId(categoryFind);
-      console.log(categoryFind);
-    } else {
-      await categoryRepository.save(categoryFind);
+    if (!checkCategoryExists) {
+      const saveNewCategory = categoryRepository.create({
+        title: category,
+      });
+      await categoryRepository.save(saveNewCategory);
     }
+
+    const categoryFind = await categoryRepository.find({
+      select: ['id'],
+      where: { title: category },
+    });
+
     const transactionBalance = new TransactionRepository();
 
     const balance = await transactionBalance.getBalance();
@@ -46,7 +49,7 @@ class CreateTransactionService {
       }
     }
 
-    const category_id = categoryFind.id;
+    const category_id = categoryFind[0].id;
     const transaction = transactionRepository.create({
       title,
       type,
